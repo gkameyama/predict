@@ -1,0 +1,27 @@
+# Runtime and generated data
+*.csv
+*.xlsx
+*.xls
+*.log
+*.txt
+
+# Python runtime artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Build and packaged output
+build/
+dist/
+.pyinstaller/
+release/
+*.zip
+*.exe
+
+# Generated image output
+*.png
+*.jpg
+*.jpeg
