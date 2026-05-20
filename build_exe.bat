@@ -3,7 +3,7 @@ setlocal
 
 cd /d "%~dp0"
 
-set "APP_NAME=DiscriminantAnalysisGUI"
+set "APP_NAME=DiscriminantAnalysis"
 set "SCRIPT_NAME=discriminant_analysis.py"
 set "PYTHON_EXE="
 set "PY_BASE="

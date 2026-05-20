@@ -261,7 +261,7 @@ def ensure_unique_path(path: Path) -> Path:
 def default_output_paths(test_path: Path, output_dir: Optional[Path] = None):
     output_dir = Path(output_dir) if output_dir else test_path.parent
     test_extension = test_path.suffix.lower() if test_path.suffix.lower() in SUPPORTED_INPUT_EXTENSIONS else ".csv"
-    report_path = ensure_unique_path(add_timestamp_to_path(output_dir / "lda_report.csv"))
+    report_path = ensure_unique_path(add_timestamp_to_path(output_dir / f"lda_report{test_extension}"))
     test_output_path = ensure_unique_path(
         add_timestamp_to_path(output_dir / f"{test_path.stem}_with_prediction{test_extension}")
     )
@@ -296,8 +296,10 @@ def save_table(output_path: Path, header, rows) -> None:
 
 
 def _fmt(value):
-    if isinstance(value, (float, np.floating)):
-        return f"{value:.9g}"
+    if isinstance(value, np.floating):
+        return float(value)
+    if isinstance(value, np.integer):
+        return int(value)
     return value
 
 
