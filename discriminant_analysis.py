@@ -295,27 +295,46 @@ def save_table(output_path: Path, header, rows) -> None:
     raise ValueError(f"{output_path.name} の出力形式は未対応です。")
 
 
+def _fmt(value):
+    if isinstance(value, (float, np.floating)):
+        return f"{value:.9g}"
+    return value
+
+
 def build_report_rows(train_accuracy: float, lda: LinearDiscriminantAnalysisModel, scaler: StandardScalerModel):
+    n_features = lda.coef_.shape[1]
+    n_cols = n_features + 1
+
+    def pad(row):
+        row = list(row)
+        return row + [""] * (n_cols - len(row))
+
+    empty = pad([])
+    header = pad(["item", "value"])
+
     rows = []
-    rows.append(["学習判別率", train_accuracy])
-    rows.append(["標準化", "平均=0, 分散=1 (自前 StandardScaler 適用済み)"])
-    rows.append(["クラスラベル", *list(lda.classes_)])
-    rows.append(["クラス事前確率", *list(lda.priors_)])
-
-    rows.append(["クラス", *[f"coef_{index + 1}" for index in range(lda.coef_.shape[1])]])
+    rows.append(pad(["学習判別率", _fmt(train_accuracy)]))
+    rows.append(empty)
+    rows.append(pad(["標準化", "平均=0, 分散=1 (自前 StandardScaler 適用済み)"]))
+    rows.append(empty)
+    rows.append(pad(["クラスラベル", *list(lda.classes_)]))
+    rows.append(pad(["クラス事前確率", *[_fmt(p) for p in lda.priors_]]))
+    rows.append(empty)
+    rows.append(["クラス", *[f"coef_{index + 1}" for index in range(n_features)]])
     for index, class_label in enumerate(lda.classes_):
-        rows.append([f"クラス {class_label}", *list(lda.coef_[index])])
-
-    rows.append(["クラス", "intercept"])
+        rows.append([f"クラス {class_label}", *[_fmt(c) for c in lda.coef_[index]]])
+    rows.append(empty)
+    rows.append(pad(["クラス", "intercept"]))
     for index, class_label in enumerate(lda.classes_):
-        rows.append([f"クラス {class_label}", lda.intercept_[index]])
+        rows.append(pad([f"クラス {class_label}", _fmt(lda.intercept_[index])]))
+    rows.append(empty)
+    rows.append(["標準化平均", *[f"mean_{index + 1}" for index in range(n_features)]])
+    rows.append(["値", *[_fmt(m) for m in scaler.mean_]])
+    rows.append(empty)
+    rows.append(["標準化分散", *[f"var_{index + 1}" for index in range(n_features)]])
+    rows.append(["値", *[_fmt(v) for v in scaler.var_]])
 
-    rows.append(["標準化平均", *[f"mean_{index + 1}" for index in range(len(scaler.mean_))]])
-    rows.append(["値", *list(scaler.mean_)])
-
-    rows.append(["標準化分散", *[f"var_{index + 1}" for index in range(len(scaler.var_))]])
-    rows.append(["値", *list(scaler.var_)])
-    return rows
+    return header, rows
 
 
 def append_prediction_column(header, rows, predictions):
@@ -362,8 +381,8 @@ def run_analysis(
     lda.fit(x_train_std, y_train)
 
     train_accuracy = lda.score(x_train_std, y_train)
-    report_rows = build_report_rows(train_accuracy, lda, scaler)
-    save_table(report_path, ["item", "value"], report_rows)
+    report_header, report_rows = build_report_rows(train_accuracy, lda, scaler)
+    save_table(report_path, report_header, report_rows)
 
     y_pred = lda.predict(x_test_std)
     test_output_header, test_output_rows = append_prediction_column(test_header, test_rows, y_pred)
