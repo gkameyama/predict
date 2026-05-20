@@ -5,6 +5,7 @@
 
 # Build and packaged output
 .pyinstaller/
+__pycache__
 build/
 dist/
 test/
