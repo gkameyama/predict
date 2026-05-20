@@ -1,52 +1,78 @@
-判別分析 GUI ツール 配布説明
+判別分析ツール
 
-1. 概要
-このツールは、学習用ファイルとテスト用ファイルを読み込み、
-判別分析 (LDA) によりテストデータへ予測ラベルを付与する Windows 用 GUI アプリです。
+学習用データとテスト用データを読み込み、線形判別分析（LDA）でテスト用データに予測ラベルを付与するツールです。GUI とコマンドラインの両方で実行できます。
 
-2. 対応ファイル
-- 入力対応形式: csv, xlsx
-- 出力形式:
-  - レポート: csv
-  - 予測結果: テスト入力が csv の場合は csv、xlsx の場合は xlsx
+1. 実行ファイル
 
-3. 起動方法
-- DiscriminantAnalysisGUI.exe をダブルクリックしてください。
+- DiscriminantAnalysis.exe
+  - CSV と Excel（.xlsx）に対応した通常版です。
+- DiscriminantAnalysisCSV.exe
+  - CSV のみに対応した軽量版です。
 
-4. 使い方
-- 学習ファイルを選択
-- テストファイルを選択
-- 必要に応じて出力フォルダを選択
-- 実行 ボタンを押す
+2. 対応形式
 
-5. 入力データの前提
-- 学習ファイル:
-  - 1列目: ID
-  - 2列目以降: 特徴量
-  - 最終列: ラベル
-- テストファイル:
-  - 1列目: ID
-  - 2列目以降: 特徴量
-  - 最終列が label / target / cluster の場合はラベル列として扱います
+- DiscriminantAnalysis
+  - 入力: .csv, .xlsx
+  - 出力: 入力したテストファイルと同じ形式
+- DiscriminantAnalysisCSV
+  - 入力: .csv
+  - 出力: .csv
 
-6. 出力ファイル
-- 既存ファイルを上書きしないよう、出力ファイル名の末尾に月日時分を付けます
-- 同じ分に複数回実行した場合は _01 のような連番が付きます
+通常版では、テストファイルが .csv の場合は CSV、.xlsx の場合は Excel で結果を保存します。レポートも同じ拡張子で保存されます。
 
-7. 出力される主なファイル
-- lda_report_月日時分.csv
-- test_with_prediction_月日時分.csv または xlsx
+3. 入力データ
 
-8. 注意事項
-- 特徴量列には数値を入力してください
-- 学習データとテストデータの特徴量数は一致している必要があります
-- 学習データのラベル列には 2 つ以上のグループが必要です
+学習用データ:
+- 1列目: ID
+- 2列目以降: 特徴量
+- 最終列: ラベル
+- ラベルは2種類以上必要です。
 
-9. 配布物
-- 本アプリは Windows 用 exe です
-- インストール不要で実行できます
+テスト用データ:
+- 1列目: ID
+- 2列目以降: 特徴量
+- 最終列名が label, target, cluster の場合はラベル列として扱い、予測対象の特徴量から除外します。
 
-10. ビルド情報
-- GUI 版
-- onefile 形式
-- 対応形式: csv, xlsx
+特徴量はすべて数値である必要があります。学習用データとテスト用データの特徴量数は一致している必要があります。
+
+4. 出力ファイル
+
+出力先フォルダを指定しない場合、テスト用データと同じフォルダに保存します。ファイル名には MMDDHHMM 形式のタイムスタンプが付き、同名ファイルがある場合は _01, _02 のような連番が付きます。
+
+- lda_report_日時.csv または lda_report_日時.xlsx
+  - 学習データの判別精度、クラス事前確率、係数、切片、標準化に使った平均と分散を出力します。
+- <テストファイル名>_with_prediction_日時.csv または .xlsx
+  - テスト用データに predicted_label 列を追加した結果を出力します。
+
+5. GUIで使う
+
+- 実行ファイルを起動します。
+- 学習用ファイルを選択します。
+- テスト用ファイルを選択します。
+- 必要に応じて出力フォルダを選択します。
+- 実行ボタンを押します。
+
+引数なしで Python スクリプトを起動した場合も GUI が起動します。
+
+python discriminant_analysis.py
+python discriminant_analysis_csv.py
+
+6. コマンドラインで使う
+
+通常版:
+
+python discriminant_analysis.py --train data.xlsx --test test.xlsx --output-dir output
+
+CSV専用版:
+
+python discriminant_analysis_csv.py --train data.csv --test test.csv --output-dir output
+
+主な引数:
+- --train: 学習用ファイル
+- --test: テスト用ファイル
+- --output-dir: 出力フォルダ
+- --output-report: レポートの出力ファイル名
+- --output-test: 予測結果の出力ファイル名
+- --gui: GUIを起動
+
+--output-report と --output-test を指定した場合も、指定名にタイムスタンプが付与されます。
