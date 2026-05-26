@@ -77,3 +77,8 @@ python discriminant_analysis_csv.py --train data.csv --test test.csv --output-di
 - --gui: GUIを起動
 
 --output-report と --output-test を指定した場合も、指定名にタイムスタンプが付与されます。
+
+7. 追加出力
+
+- lda_report_日時.csv または lda_report_日時.xlsx の一番下に、テストデータでの予測グループ集計分布を出力します。
+- 集計分布は predicted_label, count, ratio の列で、予測グループごとの件数と比率を確認できます。

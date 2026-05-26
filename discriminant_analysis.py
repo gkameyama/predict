@@ -309,9 +309,10 @@ def build_report_rows(
     scaler: StandardScalerModel,
     y_train: np.ndarray,
     train_predictions: np.ndarray,
+    test_predictions: np.ndarray,
 ):
     n_features = lda.coef_.shape[1]
-    n_cols = max(n_features + 1, len(lda.classes_) + 2)
+    n_cols = max(n_features + 1, len(lda.classes_) + 2, 4)
 
     def pad(row):
         row = list(row)
@@ -354,6 +355,15 @@ def build_report_rows(
     rows.append(empty)
     rows.append(["標準化分散", *[f"var_{index + 1}" for index in range(n_features)]])
     rows.append(["値", *[_fmt(v) for v in scaler.var_]])
+    rows.append(empty)
+    rows.append(pad(["テストデータ予測グループ集計分布"]))
+    rows.append(pad(["predicted_label", "count", "ratio"]))
+    test_total = len(test_predictions)
+    for class_label in lda.classes_:
+        count = int(np.sum(test_predictions == class_label))
+        ratio = count / test_total if test_total else 0
+        rows.append(pad([class_label, count, _fmt(ratio)]))
+    rows.append(pad(["total", test_total, _fmt(1.0 if test_total else 0)]))
 
     return header, rows
 
@@ -401,12 +411,14 @@ def run_analysis(
     lda = LinearDiscriminantAnalysisModel()
     lda.fit(x_train_std, y_train)
 
+    y_pred = lda.predict(x_test_std)
     train_predictions = lda.predict(x_train_std)
     train_accuracy = float(np.mean(train_predictions == y_train))
-    report_header, report_rows = build_report_rows(train_accuracy, lda, scaler, y_train, train_predictions)
+    report_header, report_rows = build_report_rows(
+        train_accuracy, lda, scaler, y_train, train_predictions, y_pred
+    )
     save_table(report_path, report_header, report_rows)
 
-    y_pred = lda.predict(x_test_std)
     test_output_header, test_output_rows = append_prediction_column(test_header, test_rows, y_pred)
     save_table(test_output_path, test_output_header, test_output_rows)
 
