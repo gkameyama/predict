@@ -244,9 +244,15 @@ def _fmt(value):
     return value
 
 
-def build_report_rows(train_accuracy: float, lda: LinearDiscriminantAnalysisModel, scaler: StandardScalerModel):
+def build_report_rows(
+    train_accuracy: float,
+    lda: LinearDiscriminantAnalysisModel,
+    scaler: StandardScalerModel,
+    y_train: np.ndarray,
+    train_predictions: np.ndarray,
+):
     n_features = lda.coef_.shape[1]
-    n_cols = n_features + 1
+    n_cols = max(n_features + 1, len(lda.classes_) + 2)
 
     def pad(row):
         row = list(row)
@@ -257,6 +263,19 @@ def build_report_rows(train_accuracy: float, lda: LinearDiscriminantAnalysisMode
 
     rows = []
     rows.append(pad(["学習判別率", _fmt(train_accuracy)]))
+    rows.append(empty)
+    rows.append(pad(["学習データクロス集計", "予測グループ"]))
+    rows.append(pad(["クラスター", *list(lda.classes_), "合計"]))
+    column_totals = np.zeros(len(lda.classes_), dtype=int)
+    for true_label in lda.classes_:
+        counts = []
+        true_mask = y_train == true_label
+        for pred_index, predicted_label in enumerate(lda.classes_):
+            count = int(np.sum(true_mask & (train_predictions == predicted_label)))
+            counts.append(count)
+            column_totals[pred_index] += count
+        rows.append(pad([true_label, *counts, int(np.sum(counts))]))
+    rows.append(pad(["合計", *[int(total) for total in column_totals], int(np.sum(column_totals))]))
     rows.append(empty)
     rows.append(pad(["標準化", "平均=0, 分散=1 (自前 StandardScaler 適用済み)"]))
     rows.append(empty)
@@ -322,8 +341,9 @@ def run_analysis(
     lda = LinearDiscriminantAnalysisModel()
     lda.fit(x_train_std, y_train)
 
-    train_accuracy = lda.score(x_train_std, y_train)
-    report_header, report_rows = build_report_rows(train_accuracy, lda, scaler)
+    train_predictions = lda.predict(x_train_std)
+    train_accuracy = float(np.mean(train_predictions == y_train))
+    report_header, report_rows = build_report_rows(train_accuracy, lda, scaler, y_train, train_predictions)
     write_csv_table(report_path, report_header, report_rows)
 
     y_pred = lda.predict(x_test_std)
