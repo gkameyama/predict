@@ -2,13 +2,13 @@
 *.csv
 *.xlsx
 *.txt
+*.zip
 
 # Build and packaged output
 .pyinstaller/
 __pycache__
 build/
 dist/
-test/
-output/
-share2/
-*.zip
+v1/
+v2/
+xxx/
